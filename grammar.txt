@@ -4,8 +4,11 @@ term    : factor ((MUL|DIV) factor)*
 
 factor  : (PLUS|MINUS) factor
         : power
+        : modulo
 
 power   : atom (POW factor)*
+
+modulo  : atom (MOD factor)*
 
 atom    : INT|FLOAT
         : LPAREN expr RPAREN

@@ -96,6 +96,7 @@ TT_MINUS = 'MINUS'
 TT_MUL = 'MUL'
 TT_DIV = 'DIV'
 TT_POW = 'POW'
+TT_MOD = 'MOD'
 TT_LPAREN = 'LPAREN'
 TT_RPAREN = 'RPAREN'
 TT_EOF = 'EOF'
@@ -156,6 +157,9 @@ class Lexer:
                 self.advance()
             elif self.current_char == '^':
                 tokens.append(Token(TT_POW, pos_start=self.pos))
+                self.advance()
+            elif self.current_char == '%':
+                tokens.append(Token(TT_MOD, pos_start=self.pos))
                 self.advance()
             elif self.current_char == '(':
                 tokens.append(Token(TT_LPAREN, pos_start=self.pos))
@@ -307,7 +311,8 @@ class Parser:
     def power(self):
         return self.bin_op(self.atom, (TT_POW, ), self.factor)
 
-
+    def modulo(self):
+        return self.bin_op(self.atom, (TT_MOD, ), self.factor)
 
     def factor(self):
         res = ParseResult()
@@ -318,8 +323,8 @@ class Parser:
             factor = res.register(self.factor())
             if res.error: return res
             return res.success(UnaryOpNode(tok, factor))
-
-        return self.power()
+        
+        return self.power() # return self.modulo()
     
     def term(self):
         return self.bin_op(self.factor, (TT_MUL, TT_DIV))
@@ -410,6 +415,10 @@ class Number:
         if (isinstance(other, Number)):
             return Number(self.value ** other.value).set_context(self.context), None
 
+    def modulo_by(self, other):
+        if (isinstance(other, Number)):
+            return Number(self.value % other.value).set_context(self.context), None
+
     def __repr__(self):
         return str(self.value)
 ####################
@@ -459,6 +468,8 @@ class Interpreter:
             result, error = left.dived_by(right)
         elif node.op_tok.type == TT_POW:
             result, error = left.powed_by(right)
+        elif node.op_tok.type == TT_MOD:
+            result, error = left.modulo_by(right)
 
 
         if error:
