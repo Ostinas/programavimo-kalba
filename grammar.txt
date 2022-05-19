@@ -18,4 +18,7 @@ modulo          : atom (MOD factor)*
 
 atom            : INT|FLOAT|IDENTIFIER
                 : LPAREN expr RPAREN
+                : if_exp
+
+if_exp          : KEYWORD:IF expr KEYWORD: THEN expr (KEYWORD:ELSEIF expr KEYWORD: THEN expr)* (KEYWORD:ELSE expr)?
 
