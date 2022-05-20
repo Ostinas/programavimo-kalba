@@ -1,4 +1,9 @@
-statements      : NEWLINE* expr (NEWLINE+ expr)* NEWLINE*
+statements      : NEWLINE* statement (NEWLINE+ statement)* NEWLINE*
+
+statement       : KEYWORD: RETURN expr?
+                : KEYWORD: CONTINUE
+                : KEYWORD: BREAK
+                : expr
 
 expr            : KEYWORD: VAR IDENTIFIER EQ expr
                 : comp_exp ((KEYWORD:AND|KEYWORD:OR) comp_exp)*
@@ -31,20 +36,20 @@ atom            : INT|FLOAT|IDENTIFIER
 list_exp        : LSQUARE ( expr (COMMA expr)*)? RSQUARE
 
 if_exp          : KEYWORD: IF expr KEYWORD:THEN
-                  (expr if_expr_b|if_expr_c?)
+                  (statement if_expr_b|if_expr_c?)
                 | (NEWLINE statements KEYWORD:END|if_expr_b|if_expr_c)
 
 if_exp_b        : KEYWORD: ELIF expr KEYWORD:THEN
-                  (expr if_expr_b|if_expr_c?)
+                  (statement if_expr_b|if_expr_c?)
                 | (NEWLINE statements KEYWORD:END|if_expr_b|if_expr_c)
 
-if_exp_c        : KEYWORD: ELSE expr
+if_exp_c        : KEYWORD: ELSE statement
                 | (NEWLINE statements KEYWORD:END)
 
-for_exp         : KEYWORD: FOR IDENTIFIER EQ expr KEYWORD: TO expr (KEYWORD:STEP expr)? KEYWORD:THEN expr
+for_exp         : KEYWORD: FOR IDENTIFIER EQ expr KEYWORD: TO expr (KEYWORD:STEP expr)? KEYWORD:THEN statement
                 | (NEWLINE statements KEYWORD:END)
 
-while_exp       : KEYWORD: WHILE expr KEYWORD:THEN expr
+while_exp       : KEYWORD: WHILE expr KEYWORD:THEN statement
                 | (NEWLINE statements KEYWORD:END)
 
 func_def        : KEYWORD: FUN IDENTIFIER?
