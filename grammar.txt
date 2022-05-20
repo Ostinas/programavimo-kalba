@@ -19,6 +19,11 @@ modulo          : atom (MOD factor)*
 atom            : INT|FLOAT|IDENTIFIER
                 : LPAREN expr RPAREN
                 : if_exp
+                : for_exp
+                : while_exp
 
 if_exp          : KEYWORD:IF expr KEYWORD: THEN expr (KEYWORD:ELSEIF expr KEYWORD: THEN expr)* (KEYWORD:ELSE expr)?
 
+for_exp         : KEYWORD: FOR IDENTIFIER EQ expr KEYWORD: TO expr (KEYWORD:STEP expr)? KEYWORD:THEN expr
+
+while_exp       : KEYWORD:WHILE expr KEYWORD:THEN expr
