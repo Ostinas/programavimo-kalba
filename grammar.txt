@@ -12,18 +12,25 @@ factor          : (PLUS|MINUS) factor
                 : power
                 : modulo
 
-power           : atom (POW factor)*
+power           : call (POW factor)*
 
-modulo          : atom (MOD factor)*
+modulo          : call (MOD factor)*
+
+call            : atom (LPAREN ( expr (COMMA expr)*)? RPAREN)?
 
 atom            : INT|FLOAT|IDENTIFIER
                 : LPAREN expr RPAREN
                 : if_exp
                 : for_exp
                 : while_exp
+                : func_def
 
 if_exp          : KEYWORD:IF expr KEYWORD: THEN expr (KEYWORD:ELSEIF expr KEYWORD: THEN expr)* (KEYWORD:ELSE expr)?
 
 for_exp         : KEYWORD: FOR IDENTIFIER EQ expr KEYWORD: TO expr (KEYWORD:STEP expr)? KEYWORD:THEN expr
 
 while_exp       : KEYWORD:WHILE expr KEYWORD:THEN expr
+
+func_def        : KEYWORD:FUN IDENTIFIER?
+                  LPAREN ( IDENTIFIER (COMMA IDENTIFIER)*)? RPAREN
+                  ARROW expr
