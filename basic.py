@@ -397,8 +397,9 @@ class StringNode:
         return f'{self.tok}'
 
 class VarAccessNode:
-    def __init__(self, var_name_tok):
+    def __init__(self, var_name_tok, was_modified = False):
         self.var_name_tok = var_name_tok
+        self.was_modified = was_modified
         self.pos_start = self.var_name_tok.pos_start
         self.pos_end = self.var_name_tok.pos_end
 
@@ -1138,7 +1139,8 @@ class Parser:
             self.advance()
             expr = res.register(self.expr())
             if res.error: return res
-            return res.success(VarAssignNode(var_name, expr, True))
+
+            return res.success(VarAssignNode(var_name, expr, False))
         elif self.current_tok.matches(TT_KEYWORD, 'modified'):
             res.register_advancement()
             self.advance()
@@ -1948,9 +1950,13 @@ class Interpreter:
     def visit_VarAssignNode(self, node, context):
         res = RTResult()
         var_name = node.var_name_tok.value
-        was_modified = node.was_modified
+
+        prev_value = context.symbol_table.get(var_name)
+        if (prev_value != None):
+            node.was_modified = True
+        print(f"Was modified: {node.was_modified}")
+
         value = res.register(self.visit(node.value_node, context))
-        print(f"assigning, was modified: {was_modified}")
         if res.should_return(): return res
 
         context.symbol_table.set(var_name, value)
@@ -2121,11 +2127,12 @@ class Interpreter:
 
         var_name = node.var_tok.value
         value = context.symbol_table.get(var_name)
-        was_modified = node.var_tok.value.was_modified
-
+        was_modified = False#node.var_tok.was_modified
+        # need to access VarAssignNode.was_modified somehow
+        
         print(f"var name: {var_name} value: {value} was modified: {was_modified}")
 
-        if (value == None):
+        if (was_modified):
             return res.success(False)
         else:
             return res.success(True)
