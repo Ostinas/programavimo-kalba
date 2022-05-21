@@ -148,7 +148,8 @@ KEYWORDS = [
     'end',
     'return',
     'continue',
-    'break'
+    'break',
+    'modified'
 ]
 
 class Token:
@@ -439,8 +440,8 @@ class IfNode:
         self.pos_end = (self.else_case or self.cases[len(self.cases) - 1])[0].pos_end
 
 class ForNode:
-    def __init__(self, var_namme_tok, start_value_node, end_value_node, step_value_node, body_node, should_return_null):
-        self.var_name_tok = var_namme_tok
+    def __init__(self, var_name_tok, start_value_node, end_value_node, step_value_node, body_node, should_return_null):
+        self.var_name_tok = var_name_tok
         self.start_value_node = start_value_node
         self.end_value_node = end_value_node
         self.step_value_node = step_value_node
@@ -508,6 +509,10 @@ class BreakNode:
     def __init__(self, pos_start, pos_end):
         self.pos_start = pos_start
         self.pos_end = pos_end
+
+class ModifiedNode:
+    def __init__(self, var_name_tok):
+        self.var_name_tok = var_name_tok
 
 ####################
 # PARSE RESULT
@@ -649,6 +654,21 @@ class Parser:
         return res.success(expr)
 
     
+
+    def modified_expr(self):
+        res = ParseResult()
+
+        res.register_advancement()
+        self.advance()
+
+        varAccessNode = res.register(self.expr())
+        if res.error:
+            return res.failure(InvalidSyntaxError(
+                self.current_tok.pos_start, self.current_tok.pos_end,
+                "Expected a variable"
+            ))
+
+        return res.success(ModifiedNode(varAccessNode.var_name_tok.value))
 
     def if_expr(self):
         res = ParseResult()
@@ -991,6 +1011,12 @@ class Parser:
             func_def = res.register(self.func_def())
             if res.error: return res
             return res.success(func_def)
+
+        elif tok.matches(TT_KEYWORD, 'modified'):
+            modified_expr = res.register(self.modified_expr())
+            if res.error: return res
+            return res.success(modified_expr)
+
 
         return res.failure(InvalidSyntaxError(
             tok.pos_start, tok.pos_end,
@@ -2073,6 +2099,17 @@ class Interpreter:
             context.symbol_table.set(func_name, func_value)
         
         return res.success(func_value)
+
+    def visit_ModifiedNode(self, node, context):
+        res = RTResult()
+
+        value = context.symbol_table.get(node.var_name_tok)
+        print(f"var name: {node.var_name_tok} value: {value}")
+
+        if (value == None):
+            return res.success(False)
+        else:
+            return res.success(True)
     
     def visit_CallNode(self, node, context):
         res = RTResult()
