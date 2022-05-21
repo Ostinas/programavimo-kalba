@@ -33,7 +33,7 @@ class Error:
         self.details = details
 
     def as_string(self):
-        result = f'{self.error_name}: {self.details}'
+        result = f'{self.error_name}: {self.details}\n'
         result += f'File {self.pos_start.fn}, line {self.pos_start.ln + 1}'
         result += '\n\n' + string_with_arrows(self.pos_start.ftxt, self.pos_start, self.pos_end)
         return result
@@ -193,6 +193,8 @@ class Lexer:
         while self.current_char != None:
             if self.current_char in ' \t':
                 self.advance()
+            elif self.current_char == '#':
+                self.skip_comment()
             elif self.current_char in ';\n':
                 tokens.append(Token(TT_NEWLINE, pos_start=self.pos))
                 self.advance()
@@ -262,9 +264,7 @@ class Lexer:
             if self.current_char == '.': 
                 if dot_count == 1: break
                 dot_count += 1
-                num_str += '.'
-            else:
-                num_str += self.current_char
+            num_str += self.current_char
             self.advance()
         if dot_count == 0:
             return Token(TT_INT, int(num_str), pos_start, self.pos)
@@ -314,7 +314,7 @@ class Lexer:
         self.advance()
 
         if self.current_char == '>':
-            self.advance();
+            self.advance()
             tok_type = TT_ARROW
 
         return Token(tok_type, pos_start=pos_start, pos_end=self.pos)
@@ -362,6 +362,14 @@ class Lexer:
             tok_type = TT_GTE
 
         return Token(tok_type, pos_start=pos_start, pos_end=self.pos)
+
+    def skip_comment(self):
+        self.advance()
+
+        while self.current_char != '\n':
+            self.advance()
+        
+        self.advance()
 
 ####################
 # NODES
@@ -550,8 +558,7 @@ class Parser:
 
     def advance(self):
         self.tok_idx += 1
-        if self.tok_idx < len(self.tokens):
-            self.current_tok = self.tokens[self.tok_idx]
+        self.update_current_tok()
         return self.current_tok
 
     def reverse(self, amount = 1):
@@ -1186,7 +1193,7 @@ class Parser:
         if self.current_tok.type == TT_ARROW:
             res.register_advancement()
             self.advance()
-            node_to_return = res.register(self.expr())
+            body = res.register(self.expr())
             if res.error: return res
 
             return res.success(FuncDefNode(
@@ -1774,6 +1781,35 @@ class BuiltInFunction(BaseFunction):
         return RTResult().success(Number.null)
     execute_extend.arg_names = ['listA', 'listB']
 
+    def execute_len(self, exec_ctx):
+        list_ = exec_ctx.symbol_table.get("list")
+
+        if not isinstance(list_, List):
+            return RTResult().failure(RTError(self.pos_start, self.pos_end, "Argument must be a list", exec_ctx))
+        return RTResult().success(Number(len(list_.elements)))
+    execute_len.arg_names = ["list"]
+
+    def execute_run(self, exec_ctx):
+        fn = exec_ctx.symbol_table.get("fn")
+
+        if not isinstance(fn, String):
+            return RTResult().failure(RTError(self.pos_start, self.pos_end, "Argument must be a string", exec_ctx))
+
+        fn = fn.value
+        try:
+            with open(fn, "r") as f:
+                script = f.read()
+        except Exception as e:
+            RTResult().failure(RTError(self.pos_start, self.pos_end, f"Falied to load script \"{fn}\"\n" + str(e), exec_ctx))
+
+        _, error = run(fn, script)
+
+        if error:
+            RTResult().failure(RTError(self.pos_start, self.pos_end, f"Falied to load script \"{fn}\"\n" + error.as_string(), exec_ctx))
+
+        return RTResult().success(Number.null)
+    execute_run.arg_names = ["fn"]
+
 BuiltInFunction.print           = BuiltInFunction("print")
 BuiltInFunction.print_return    = BuiltInFunction("print_return")
 BuiltInFunction.input           = BuiltInFunction("input")
@@ -1786,6 +1822,8 @@ BuiltInFunction.is_function     = BuiltInFunction("is_function")
 BuiltInFunction.append          = BuiltInFunction("append")
 BuiltInFunction.pop             = BuiltInFunction("pop")
 BuiltInFunction.extend          = BuiltInFunction("extend")
+BuiltInFunction.len             = BuiltInFunction("len")
+BuiltInFunction.run             = BuiltInFunction("run")
 
 ####################
 # CONTEXT
@@ -2059,6 +2097,8 @@ class Interpreter:
         if node.node_to_return:
             value = res.register(self.visit(node.node_to_return, context))
             if res.should_return(): return res
+        else:
+            value = Number.null
 
         return res.success_return(value)
 
@@ -2089,6 +2129,8 @@ global_symbol_table.set("IS_FUN", BuiltInFunction.is_function)
 global_symbol_table.set("APPEND", BuiltInFunction.append)
 global_symbol_table.set("POP", BuiltInFunction.pop)
 global_symbol_table.set("EXTEND", BuiltInFunction.extend)
+global_symbol_table.set("LEN", BuiltInFunction.len)
+global_symbol_table.set("RUN", BuiltInFunction.run)
 
 def run(fn, text):
     lexer = Lexer(fn, text)

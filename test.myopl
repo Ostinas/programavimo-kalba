@@ -1,0 +1,22 @@
+# KOMENTARAS
+
+FUN oopify(prefix) -> prefix + "oop"
+
+FUN join(elements, seperator)
+    VAR result = ""
+    var len = LEN(elements)
+
+    FOR i = 0 TO len THEN
+        VAR result = result + elements/if_exp
+        VAR result = result + seperator
+    END
+
+    return result
+END
+
+PRINT("Labas")
+
+FOR i = 0 TO 5 THEN
+    PRINT("asdasd")
+    PRINT(join([oopify("l"), oopify("sp")], ", "))
+END

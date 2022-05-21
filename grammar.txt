@@ -25,7 +25,7 @@ modulo          : call (MOD factor)*
 
 call            : atom (LPAREN ( expr (COMMA expr)*)? RPAREN)?
 
-atom            : INT|FLOAT|IDENTIFIER
+atom            : INT|FLOAT|STRING|IDENTIFIER
                 : LPAREN expr RPAREN
                 : list_exp
                 : if_exp
