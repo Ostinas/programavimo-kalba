@@ -1,4 +1,5 @@
 from ast import BinOp
+import copy
 import keyword
 from lib2to3.pgen2.token import tok_name
 from multiprocessing import context
@@ -149,7 +150,8 @@ KEYWORDS = [
     'return',
     'continue',
     'break',
-    'modified'
+    'modified',
+    'original'
 ]
 
 class Token:
@@ -404,10 +406,11 @@ class VarAccessNode:
         self.pos_end = self.var_name_tok.pos_end
 
 class VarAssignNode:
-    def __init__(self, var_name_tok, value_node, was_modified):
+    def __init__(self, var_name_tok, value_node, was_modified, original_value):
         self.var_name_tok = var_name_tok
         self.value_node = value_node
         self.was_modified = was_modified
+        self.original_value = original_value
         self.pos_start = self.var_name_tok.pos_start
         self.pos_end = self.var_name_tok.pos_end
         
@@ -513,6 +516,10 @@ class BreakNode:
         self.pos_end = pos_end
 
 class ModifiedNode:
+    def __init__(self, var_tok):
+        self.var_tok = var_tok
+
+class OriginalNode:
     def __init__(self, var_tok):
         self.var_tok = var_tok
 
@@ -655,8 +662,6 @@ class Parser:
 
         return res.success(expr)
 
-    
-
     def modified_expr(self):
         res = ParseResult()
 
@@ -671,6 +676,21 @@ class Parser:
             ))
 
         return res.success(ModifiedNode(varAccessNode))
+
+    def original_expr(self):
+        res = ParseResult()
+
+        res.register_advancement()
+        self.advance()
+
+        varAccessNode = res.register(self.expr())
+        if res.error:
+            return res.failure(InvalidSyntaxError(
+                self.current_tok.pos_start, self.current_tok.pos_end,
+                "Expected identifier"
+            ))
+
+        return res.success(OriginalNode(varAccessNode))
 
     def if_expr(self):
         res = ParseResult()
@@ -1019,6 +1039,10 @@ class Parser:
             if res.error: return res
             return res.success(modified_expr)
 
+        elif tok.matches(TT_KEYWORD, 'original'):
+            original_expr = res.register(self.original_expr())
+            if res.error: return res
+            return res.success(original_expr)
 
         return res.failure(InvalidSyntaxError(
             tok.pos_start, tok.pos_end,
@@ -1140,7 +1164,7 @@ class Parser:
             expr = res.register(self.expr())
             if res.error: return res
 
-            return res.success(VarAssignNode(var_name, expr, False))
+            return res.success(VarAssignNode(var_name, expr, False, None))
         elif self.current_tok.matches(TT_KEYWORD, 'modified'):
             res.register_advancement()
             self.advance()
@@ -1154,6 +1178,19 @@ class Parser:
             res.register_advancement()
             self.advance()
             return res.success(ModifiedNode(var))
+        elif self.current_tok.matches(TT_KEYWORD, 'original'):
+            res.register_advancement()
+            self.advance()
+            if self.current_tok.type != TT_IDENTIFIER:
+                return res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start, self.current_tok.pos_end,
+                    "Expected identifier"
+                ))
+
+            var = self.current_tok
+            res.register_advancement()
+            self.advance()
+            return res.success(OriginalNode(var))
 
         node = res.register(self.bin_op(self.comp_exp, ((TT_KEYWORD, "and"), (TT_KEYWORD, "or"))))
 
@@ -1883,7 +1920,7 @@ class Context:
 ####################
 
 class SymbolTable:
-    def __init__(self,parent=None):
+    def __init__(self, parent=None):
         self.symbols = {}
         self.parent = parent
 
@@ -1893,8 +1930,8 @@ class SymbolTable:
             return self.parent.get(name)
         return value
 
-    def set(self, name, value):
-        self.symbols[name] = value
+    def set(self, name, value, was_modified = False, original_value = None):
+        self.symbols[name] = [value, was_modified, original_value]
 
     def remove(self, name):
         del self.symbols[name]
@@ -1944,7 +1981,7 @@ class Interpreter:
                 node.pos_start, node.pos_end,
                 f"'{var_name}' is not defined", context
             ))
-        value = value.copy().set_pos(node.pos_start, node.pos_end).set_context(context)
+        value = value[0].copy().set_pos(node.pos_start, node.pos_end).set_context(context)
         return res.success(value)
 
     def visit_VarAssignNode(self, node, context):
@@ -1952,14 +1989,17 @@ class Interpreter:
         var_name = node.var_name_tok.value
 
         prev_value = context.symbol_table.get(var_name)
-        if (prev_value != None):
-            node.was_modified = True
-        print(f"Was modified: {node.was_modified}")
-
         value = res.register(self.visit(node.value_node, context))
-        if res.should_return(): return res
 
-        context.symbol_table.set(var_name, value)
+        if (prev_value != None):
+            node.original_value = prev_value[2]
+            node.was_modified = True
+        else:
+            node.original_value = value
+
+        if res.should_return(): return res
+        
+        context.symbol_table.set(var_name, value, node.was_modified, node.original_value)
         return res.success(value)
 
     def visit_BinOpNode(self, node, context):
@@ -2126,16 +2166,19 @@ class Interpreter:
         res = RTResult()
 
         var_name = node.var_tok.value
-        value = context.symbol_table.get(var_name)
-        was_modified = False#node.var_tok.was_modified
-        # need to access VarAssignNode.was_modified somehow
-        
-        print(f"var name: {var_name} value: {value} was modified: {was_modified}")
+        values = context.symbol_table.get(var_name)
+        if (values != None):
+            return res.success(values[1])
+        return res.success(False)
 
-        if (was_modified):
-            return res.success(False)
-        else:
-            return res.success(True)
+    def visit_OriginalNode(self, node, context):
+        res = RTResult()
+
+        var_name = node.var_tok.value
+        values = context.symbol_table.get(var_name)
+        if (values != None):
+            return res.success(values[2])
+        return res.success(None)
     
     def visit_CallNode(self, node, context):
         res = RTResult()
