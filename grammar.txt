@@ -52,7 +52,7 @@ for_exp         : KEYWORD: FOR IDENTIFIER EQ expr KEYWORD: TO expr (KEYWORD:STEP
 while_exp       : KEYWORD: WHILE expr KEYWORD:THEN statement
                 | (NEWLINE statements KEYWORD:END)
 
-func_def        : KEYWORD: FUN IDENTIFIER?
+func_def        : KEYWORD: function IDENTIFIER?
                   LPAREN ( IDENTIFIER (COMMA IDENTIFIER)*)? RPAREN
                   (ARROW expr)
                 | (NEWLINE statements KEYWORD:END)

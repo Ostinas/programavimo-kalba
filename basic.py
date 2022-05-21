@@ -143,7 +143,7 @@ KEYWORDS = [
     'FOR',
     'TO',
     'STEP',
-    'FUN',
+    'function',
     'WHILE',
     'END',
     'RETURN',
@@ -643,7 +643,7 @@ class Parser:
         if res.error:
             return res.failure(InvalidSyntaxError(
                 self.current_tok.pos_start, self.current_tok.pos_end,
-                "Expected 'RETURN', 'CONTINUE', 'BREAK', 'VAR', 'IF', 'FOR', 'WHILE', 'FUN', int, float, identifier, '+', '-', '(', '[' or 'NOT'"
+                "Expected 'RETURN', 'CONTINUE', 'BREAK', 'VAR', 'IF', 'FOR', 'WHILE', 'function', int, float, identifier, '+', '-', '(', '[' or 'NOT'"
             ))
 
         return res.success(expr)
@@ -911,7 +911,7 @@ class Parser:
                 if res.error:
                     return res.failure(InvalidSyntaxError(
                         self.current_tok.pos_start, self.current_tok.pos_end,
-                        "Expected ')', 'VAR', 'IF', 'FOR', 'WHILE', 'FUN', int, float, identifier, '+', '-', '(', '[' or 'NOT'"
+                        "Expected ')', 'VAR', 'IF', 'FOR', 'WHILE', 'function', int, float, identifier, '+', '-', '(', '[' or 'NOT'"
                     ))
                 
                 while self.current_tok.type == TT_COMMA:
@@ -987,14 +987,14 @@ class Parser:
             if res.error: return res
             return res.success(while_exp)
 
-        elif tok.matches(TT_KEYWORD, 'FUN'):
+        elif tok.matches(TT_KEYWORD, 'function'):
             func_def = res.register(self.func_def())
             if res.error: return res
             return res.success(func_def)
 
         return res.failure(InvalidSyntaxError(
             tok.pos_start, tok.pos_end,
-            "Expected int, float, identifier, '+', '-', '(', '[', 'IF', 'FOR', 'WHILE' or 'FUN'"
+            "Expected int, float, identifier, '+', '-', '(', '[', 'IF', 'FOR', 'WHILE' or 'function'"
         ))
 
     def list_exp(self):
@@ -1019,7 +1019,7 @@ class Parser:
             if res.error:
                 return res.failure(InvalidSyntaxError(
                     self.current_tok.pos_start, self.current_tok.pos_end,
-                    "Expected ']', 'VAR', 'IF', 'FOR', 'WHILE', 'FUN', int, float, identifier, '+', '-', '(', '[' or 'NOT'"
+                    "Expected ']', 'VAR', 'IF', 'FOR', 'WHILE', 'function', int, float, identifier, '+', '-', '(', '[' or 'NOT'"
                 ))
                 
             while self.current_tok.type == TT_COMMA:
@@ -1118,7 +1118,7 @@ class Parser:
         if res.error: 
             return res.failure(InvalidSyntaxError(
                 self.current_tok.pos_start, self.current_tok.pos_end,
-                "Expected 'VAR', int, float, identifier, '+', '-', 'NOT', '(', '[', 'IF', 'FOR', 'WHILE' or 'FUN'"
+                "Expected 'VAR', int, float, identifier, '+', '-', 'NOT', '(', '[', 'IF', 'FOR', 'WHILE' or 'function'"
             ))
 
         return res.success(node)
@@ -1126,10 +1126,10 @@ class Parser:
     def func_def(self):
         res = ParseResult()
 
-        if not self.current_tok.matches(TT_KEYWORD, 'FUN'):
+        if not self.current_tok.matches(TT_KEYWORD, 'function'):
             return res.failure(InvalidSyntaxError(
                 self.current_tok.pos_start, self.current_tok.pos_end,
-                f"Expected 'FUN'"
+                f"Expected 'function'"
             ))
         
         res.register_advancement()
@@ -1147,7 +1147,7 @@ class Parser:
         else:
             var_name_tok = None
             if self.current_tok.type != TT_LPAREN:
-                return res.failute(InvalidSyntaxError(
+                return res.failure(InvalidSyntaxError(
                     self.current_tok.pos_start, self.current_tok.pos_end,
                     f"Expected identifier or '('"
                 ))
@@ -2125,7 +2125,7 @@ global_symbol_table.set("CLS", BuiltInFunction.clear)
 global_symbol_table.set("IS_NUM", BuiltInFunction.is_number)
 global_symbol_table.set("IS_STR", BuiltInFunction.is_string)
 global_symbol_table.set("IS_LIST", BuiltInFunction.is_list)
-global_symbol_table.set("IS_FUN", BuiltInFunction.is_function)
+global_symbol_table.set("IS_FUNCTION", BuiltInFunction.is_function)
 global_symbol_table.set("APPEND", BuiltInFunction.append)
 global_symbol_table.set("POP", BuiltInFunction.pop)
 global_symbol_table.set("EXTEND", BuiltInFunction.extend)
