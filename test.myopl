@@ -4,7 +4,7 @@ function oopify(prefix) -> prefix + "oop"
 
 function join(elements, separator)
 	var result = ""
-	var len = LEN(elements)
+	var len = len(elements)
 
 	for i = 0 to len then
 		var result = result + elements/i
@@ -17,15 +17,15 @@ end
 function map(elements, func)
 	var new_elements = []
 
-	for i = 0 to LEN(elements) then
-		APPEND(new_elements, func(elements/i))
+	for i = 0 to len(elements) then
+		append(new_elements, func(elements/i))
 	end
 
 	return new_elements
 end
 
-PRINT("Greetings universe!")
+print("Greetings universe!")
 
 for i = 0 to 5 then
-	PRINT(join(map(["l", "sp"], oopify), ", "))
+	print(join(map(["l", "sp"], oopify), ", "))
 end
