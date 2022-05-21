@@ -403,9 +403,10 @@ class VarAccessNode:
         self.pos_end = self.var_name_tok.pos_end
 
 class VarAssignNode:
-    def __init__(self, var_name_tok, value_node):
+    def __init__(self, var_name_tok, value_node, was_modified):
         self.var_name_tok = var_name_tok
         self.value_node = value_node
+        self.was_modified = was_modified
         self.pos_start = self.var_name_tok.pos_start
         self.pos_end = self.var_name_tok.pos_end
         
@@ -511,8 +512,8 @@ class BreakNode:
         self.pos_end = pos_end
 
 class ModifiedNode:
-    def __init__(self, var_name_tok):
-        self.var_name_tok = var_name_tok
+    def __init__(self, var_tok):
+        self.var_tok = var_tok
 
 ####################
 # PARSE RESULT
@@ -665,10 +666,10 @@ class Parser:
         if res.error:
             return res.failure(InvalidSyntaxError(
                 self.current_tok.pos_start, self.current_tok.pos_end,
-                "Expected a variable"
+                "Expected identifier"
             ))
 
-        return res.success(ModifiedNode(varAccessNode.var_name_tok.value))
+        return res.success(ModifiedNode(varAccessNode))
 
     def if_expr(self):
         res = ParseResult()
@@ -1137,7 +1138,7 @@ class Parser:
             self.advance()
             expr = res.register(self.expr())
             if res.error: return res
-            return res.success(VarAssignNode(var_name, expr))
+            return res.success(VarAssignNode(var_name, expr, True))
         elif self.current_tok.matches(TT_KEYWORD, 'modified'):
             res.register_advancement()
             self.advance()
@@ -1147,10 +1148,10 @@ class Parser:
                     "Expected identifier"
                 ))
 
-            var_name = self.current_tok
+            var = self.current_tok
             res.register_advancement()
             self.advance()
-            return res.success(ModifiedNode(var_name))
+            return res.success(ModifiedNode(var))
 
         node = res.register(self.bin_op(self.comp_exp, ((TT_KEYWORD, "and"), (TT_KEYWORD, "or"))))
 
@@ -1947,7 +1948,9 @@ class Interpreter:
     def visit_VarAssignNode(self, node, context):
         res = RTResult()
         var_name = node.var_name_tok.value
+        was_modified = node.was_modified
         value = res.register(self.visit(node.value_node, context))
+        print(f"assigning, was modified: {was_modified}")
         if res.should_return(): return res
 
         context.symbol_table.set(var_name, value)
@@ -2116,8 +2119,11 @@ class Interpreter:
     def visit_ModifiedNode(self, node, context):
         res = RTResult()
 
-        value = context.symbol_table.get(node.var_name_tok)
-        print(f"var name: {node.var_name_tok} value: {value}")
+        var_name = node.var_tok.value
+        value = context.symbol_table.get(var_name)
+        was_modified = node.var_tok.value.was_modified
+
+        print(f"var name: {var_name} value: {value} was modified: {was_modified}")
 
         if (value == None):
             return res.success(False)
