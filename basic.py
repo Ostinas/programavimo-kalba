@@ -1138,6 +1138,19 @@ class Parser:
             expr = res.register(self.expr())
             if res.error: return res
             return res.success(VarAssignNode(var_name, expr))
+        elif self.current_tok.matches(TT_KEYWORD, 'modified'):
+            res.register_advancement()
+            self.advance()
+            if self.current_tok.type != TT_IDENTIFIER:
+                return res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start, self.current_tok.pos_end,
+                    "Expected identifier"
+                ))
+
+            var_name = self.current_tok
+            res.register_advancement()
+            self.advance()
+            return res.success(ModifiedNode(var_name))
 
         node = res.register(self.bin_op(self.comp_exp, ((TT_KEYWORD, "and"), (TT_KEYWORD, "or"))))
 
