@@ -1772,12 +1772,12 @@ class BuiltInFunction(BaseFunction):
     ##############################
 
     def execute_print(self, exec_ctx):
-        print(str(exec_ctx.symbol_table.get('value')))
+        print(str(exec_ctx.symbol_table.get('value')[0]))
         return RTResult().success(Number.null)
     execute_print.arg_names = ['value']
 
     def execute_print_return(self, exec_ctx):
-        return RTResult().success(String(str(exec_ctx.symbol_table.get('value'))))
+        return RTResult().success(String(str(exec_ctx.symbol_table.get('value')[0])))
     execute_print_return.arg_names = ['value']
 
     def execute_input(self, exec_ctx):
@@ -1802,28 +1802,28 @@ class BuiltInFunction(BaseFunction):
     execute_clear.arg_names = []
 
     def execute_is_number(self, exec_ctx):
-        is_number = isinstance(exec_ctx.symbol_table.get("value"), Number)
+        is_number = isinstance(exec_ctx.symbol_table.get("value")[0], Number)
         return RTResult().success(Number.true if is_number else Number.false)
     execute_is_number.arg_names = ['value']
 
     def execute_is_string(self, exec_ctx):
-        is_string = isinstance(exec_ctx.symbol_table.get("value"), String)
+        is_string = isinstance(exec_ctx.symbol_table.get("value")[0], String)
         return RTResult().success(Number.true if is_string else Number.false)
     execute_is_string.arg_names = ['value']
 
     def execute_is_list(self, exec_ctx):
-        is_list = isinstance(exec_ctx.symbol_table.get("value"), List)
+        is_list = isinstance(exec_ctx.symbol_table.get("value")[0], List)
         return RTResult().success(Number.true if is_list else Number.false)
     execute_is_list.arg_names = ['value']
 
     def execute_is_function(self, exec_ctx):
-        is_function = isinstance(exec_ctx.symbol_table.get("value"), BaseFunction)
+        is_function = isinstance(exec_ctx.symbol_table.get("value")[0], BaseFunction)
         return RTResult().success(Number.true if is_function else Number.false)
     execute_is_function.arg_names = ['value']
 
     def execute_append(self, exec_ctx):
-        list_ = exec_ctx.symbol_table.get("list")
-        value = exec_ctx.symbol_table.get("value")
+        list_ = exec_ctx.symbol_table.get("list")[0]
+        value = exec_ctx.symbol_table.get("value")[0]
 
         if not isinstance(list_, List):
             return RTResult().failure(RTError(self.pos_start, self.pos_end, "First argument must be a list", exec_ctx))
@@ -1833,8 +1833,8 @@ class BuiltInFunction(BaseFunction):
     execute_append.arg_names = ['list', 'value']
 
     def execute_pop(self, exec_ctx):
-        list_ = exec_ctx.symbol_table.get("list")
-        index = exec_ctx.symbol_table.get("index")
+        list_ = exec_ctx.symbol_table.get("list")[0]
+        index = exec_ctx.symbol_table.get("index")[0]
 
         if not isinstance(list_, List):
             return RTResult().failure(RTError(self.pos_start, self.pos_end, "First argument must be a list", exec_ctx))
@@ -1849,8 +1849,8 @@ class BuiltInFunction(BaseFunction):
     execute_pop.arg_names = ['list', 'index']
 
     def execute_extend(self, exec_ctx):
-        listA = exec_ctx.symbol_table.get("listA")
-        listB = exec_ctx.symbol_table.get("listB")
+        listA = exec_ctx.symbol_table.get("listA")[0]
+        listB = exec_ctx.symbol_table.get("listB")[0]
 
         if not isinstance(listA, List):
             return RTResult().failure(RTError(self.pos_start, self.pos_end, "First argument must be a list", exec_ctx))
@@ -1861,7 +1861,7 @@ class BuiltInFunction(BaseFunction):
     execute_extend.arg_names = ['listA', 'listB']
 
     def execute_len(self, exec_ctx):
-        list_ = exec_ctx.symbol_table.get("list")
+        list_ = exec_ctx.symbol_table.get("list")[0]
 
         if not isinstance(list_, List):
             return RTResult().failure(RTError(self.pos_start, self.pos_end, "Argument must be a list", exec_ctx))
@@ -1869,7 +1869,7 @@ class BuiltInFunction(BaseFunction):
     execute_len.arg_names = ["list"]
 
     def execute_run(self, exec_ctx):
-        fn = exec_ctx.symbol_table.get("fn")
+        fn = exec_ctx.symbol_table.get("fn")[0]
 
         if not isinstance(fn, String):
             return RTResult().failure(RTError(self.pos_start, self.pos_end, "Argument must be a string", exec_ctx))
