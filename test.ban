@@ -4,11 +4,11 @@ function oopify(prefix) -> prefix + "oop"
 
 function join(elements, separator)
 	var result = ""
-	var len = len(elements)
+	var length = length(elements)
 
-	for i = 0 to len then
+	for i = 0 to length then
 		var result = result + elements/i
-		if i != len - 1 then var result = result + separator
+		if i != length - 1 then var result = result + separator
 	end
 
 	return result

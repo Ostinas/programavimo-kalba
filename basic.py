@@ -2109,7 +2109,7 @@ class Interpreter:
         return RTResult().success_break()
 
 ####################
-# run
+# RUN
 ####################
 
 global_symbol_table = SymbolTable()
@@ -2120,16 +2120,20 @@ global_symbol_table.set("print", BuiltInFunction.print)
 global_symbol_table.set("print_return", BuiltInFunction.print_return)
 global_symbol_table.set("input", BuiltInFunction.input)
 global_symbol_table.set("input_int", BuiltInFunction.input_int)
+global_symbol_table.set("input_integer", BuiltInFunction.input_int)
 global_symbol_table.set("clear", BuiltInFunction.clear)
 global_symbol_table.set("cls", BuiltInFunction.clear)
 global_symbol_table.set("is_num", BuiltInFunction.is_number)
+global_symbol_table.set("is_number", BuiltInFunction.is_number)
 global_symbol_table.set("is_str", BuiltInFunction.is_string)
+global_symbol_table.set("is_string", BuiltInFunction.is_string)
 global_symbol_table.set("is_list", BuiltInFunction.is_list)
 global_symbol_table.set("is_function", BuiltInFunction.is_function)
 global_symbol_table.set("append", BuiltInFunction.append)
 global_symbol_table.set("pop", BuiltInFunction.pop)
 global_symbol_table.set("extend", BuiltInFunction.extend)
 global_symbol_table.set("len", BuiltInFunction.len)
+global_symbol_table.set("length", BuiltInFunction.len)
 global_symbol_table.set("run", BuiltInFunction.run)
 
 def run(fn, text):
