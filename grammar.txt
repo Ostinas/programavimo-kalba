@@ -1,14 +1,14 @@
 statements      : NEWLINE* statement (NEWLINE+ statement)* NEWLINE*
 
-statement       : KEYWORD: RETURN expr?
-                : KEYWORD: CONTINUE
-                : KEYWORD: BREAK
+statement       : KEYWORD: return expr?
+                : KEYWORD: continue
+                : KEYWORD: break
                 : expr
 
-expr            : KEYWORD: VAR IDENTIFIER EQ expr
-                : comp_exp ((KEYWORD:AND|KEYWORD:OR) comp_exp)*
+expr            : KEYWORD: var IDENTIFIER EQ expr
+                : comp_exp ((KEYWORD:and|KEYWORD:or) comp_exp)*
 
-comp_exp        : NOT comp_exp
+comp_exp        : not comp_exp
                 : arith_exp ((EE|LT|GT|LTE|GTE) arith_exp)*
 
 arith_exp       : term ((PLUS|MINUS) term)*
@@ -35,24 +35,24 @@ atom            : INT|FLOAT|STRING|IDENTIFIER
 
 list_exp        : LSQUARE ( expr (COMMA expr)*)? RSQUARE
 
-if_exp          : KEYWORD: IF expr KEYWORD:THEN
+if_exp          : KEYWORD: if expr KEYWORD:then
                   (statement if_expr_b|if_expr_c?)
-                | (NEWLINE statements KEYWORD:END|if_expr_b|if_expr_c)
+                | (NEWLINE statements KEYWORD:end|if_expr_b|if_expr_c)
 
-if_exp_b        : KEYWORD: ELIF expr KEYWORD:THEN
+if_exp_b        : KEYWORD: elseif expr KEYWORD:THthenEN
                   (statement if_expr_b|if_expr_c?)
-                | (NEWLINE statements KEYWORD:END|if_expr_b|if_expr_c)
+                | (NEWLINE statements KEYWORD:end|if_expr_b|if_expr_c)
 
-if_exp_c        : KEYWORD: ELSE statement
-                | (NEWLINE statements KEYWORD:END)
+if_exp_c        : KEYWORD: else statement
+                | (NEWLINE statements KEYWORD:end)
 
-for_exp         : KEYWORD: FOR IDENTIFIER EQ expr KEYWORD: TO expr (KEYWORD:STEP expr)? KEYWORD:THEN statement
-                | (NEWLINE statements KEYWORD:END)
+for_exp         : KEYWORD: for IDENTIFIER EQ expr KEYWORD: to expr (KEYWORD:step expr)? KEYWORD:then statement
+                | (NEWLINE statements KEYWORD:end)
 
-while_exp       : KEYWORD: WHILE expr KEYWORD:THEN statement
-                | (NEWLINE statements KEYWORD:END)
+while_exp       : KEYWORD: while expr KEYWORD:then statement
+                | (NEWLINE statements KEYWORD:end)
 
 func_def        : KEYWORD: function IDENTIFIER?
                   LPAREN ( IDENTIFIER (COMMA IDENTIFIER)*)? RPAREN
                   (ARROW expr)
-                | (NEWLINE statements KEYWORD:END)
+                | (NEWLINE statements KEYWORD:end)
