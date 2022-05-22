@@ -1,18 +1,44 @@
 # Demonstracine programa
 
-function is_perfect_square(n) -> n ^ 0.5 * n ^ 0.5 == n
-
-function is_fibbonaci(n)
-    if is_perfect_square(5 * n * n + 4) or is_perfect_square(5 * n * n - 4) then
-        return true
+function factorial(n)
+    if n < 0 then
+        print("Factorial of negative numbers is not possible.")
+    elseif n == 0 then
+        return 1
     else
-        return false
+        var factorial = 1
+        for i = 1 to n + 1 then
+            var factorial = factorial * i
+        end
+        return factorial
+    end
+end
+
+function recursive_factorial(n)
+    if n == 1 then
+        return 1
+    else
+        return (n * factorial(n - 1))
     end
 end
 
 
-for i = 0 to 11 then
-    if (is_fibbonaci(i)) then
-        print(i)
-    end
+var number = 6
+var was_modified = modified number
+print("Was number modified before factorial:")
+print(was_modified)
+
+var number = factorial(number)
+print("After factorial, number is:")
+print(number)
+
+var was_modified = modified number
+print("Was number modified after factorial:")
+print(was_modified)
+
+print("Original value of number:")
+print(original number)
+
+if recursive_factorial(original number) == number then
+    print("Recursive and non recursive solutions match.")
 end

@@ -516,11 +516,15 @@ class BreakNode:
         self.pos_end = pos_end
 
 class ModifiedNode:
-    def __init__(self, var_tok):
+    def __init__(self, pos_start, pos_end, var_tok):
+        self.pos_start = pos_start
+        self.pos_end = pos_end
         self.var_tok = var_tok
 
 class OriginalNode:
-    def __init__(self, var_tok):
+    def __init__(self, pos_start, pos_end, var_tok):
+        self.pos_start = pos_start
+        self.pos_end = pos_end
         self.var_tok = var_tok
 
 ####################
@@ -675,7 +679,7 @@ class Parser:
                 "Expected identifier"
             ))
 
-        return res.success(ModifiedNode(varAccessNode))
+        return res.success(ModifiedNode(self.current_tok.pos_start, self.current_tok.pos_end, varAccessNode))
 
     def original_expr(self):
         res = ParseResult()
@@ -690,7 +694,7 @@ class Parser:
                 "Expected identifier"
             ))
 
-        return res.success(OriginalNode(varAccessNode))
+        return res.success(OriginalNode(self.current_tok.pos_start, self.current_tok.pos_end, varAccessNode))
 
     def if_expr(self):
         res = ParseResult()
@@ -1177,7 +1181,7 @@ class Parser:
             var = self.current_tok
             res.register_advancement()
             self.advance()
-            return res.success(ModifiedNode(var))
+            return res.success(ModifiedNode(self.current_tok.pos_start, self.current_tok.pos_end, var))
         elif self.current_tok.matches(TT_KEYWORD, 'original'):
             res.register_advancement()
             self.advance()
@@ -1190,7 +1194,7 @@ class Parser:
             var = self.current_tok
             res.register_advancement()
             self.advance()
-            return res.success(OriginalNode(var))
+            return res.success(OriginalNode(self.current_tok.pos_start, self.current_tok.pos_end, var))
 
         node = res.register(self.bin_op(self.comp_exp, ((TT_KEYWORD, "and"), (TT_KEYWORD, "or"))))
 
@@ -1696,10 +1700,13 @@ class BaseFunction(Value):
 
     def populate_args(self, arg_names, args, exec_ctx):
         for i in range(len(args)):
-            arg_name = arg_names[i]
-            arg_value = args[i]
-            arg_value.set_context(exec_ctx)
-            exec_ctx.symbol_table.set(arg_name, arg_value)
+            if isinstance(args[i], bool):
+                exec_ctx.symbol_table.set(arg_names[i], args[i])
+            else:
+                arg_name = arg_names[i]
+                arg_value = args[i]
+                arg_value.set_context(exec_ctx)
+                exec_ctx.symbol_table.set(arg_name, arg_value)
 
     def check_and_populate_args(self, arg_names, args, exec_ctx):
         res = RTResult()
@@ -1981,6 +1988,8 @@ class Interpreter:
                 node.pos_start, node.pos_end,
                 f"'{var_name}' is not defined", context
             ))
+        if (value[0] == False or value[0] == True):
+            return res.success(value[0])
         value = value[0].copy().set_pos(node.pos_start, node.pos_end).set_context(context)
         return res.success(value)
 
@@ -2067,10 +2076,15 @@ class Interpreter:
             condition_value = res.register(self.visit(condition, context))
             if res.should_return(): return res
 
-            if condition_value.is_true():
+            if (isinstance(condition_value, bool)):
                 expr_value = res.register(self.visit(expr, context))
                 if res.should_return(): return res
-                return res.success(Number.null if should_return_null else expr_value)
+                return res.success(condition_value)
+            else:
+                if condition_value.is_true():
+                    expr_value = res.register(self.visit(expr, context))
+                    if res.should_return(): return res
+                    return res.success(Number.null if should_return_null else expr_value)
 
         if node.else_case:
             expr, should_return_null = node.else_case
