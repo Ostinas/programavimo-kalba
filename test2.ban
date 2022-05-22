@@ -1,0 +1,24 @@
+# Demonstracine programa
+
+function is_perfect_square(n)
+    var sqrt = n ^ 0.5
+    if sqrt * sqrt == n then
+        return true
+    end
+    return false
+end
+
+function is_fibbonaci(n)
+    if is_perfect_square(5 * n * n + 4) or is_perfect_square(5 * n * n - 4) then
+        return true
+    else
+        return false
+    end
+end
+
+
+for i = 0 to 11 then
+    if (is_fibbonaci(i)) then
+        print(i)
+    end
+end

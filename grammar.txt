@@ -39,7 +39,7 @@ if_exp          : KEYWORD: if expr KEYWORD:then
                   (statement if_expr_b|if_expr_c?)
                 | (NEWLINE statements KEYWORD:end|if_expr_b|if_expr_c)
 
-if_exp_b        : KEYWORD: elseif expr KEYWORD:THthenEN
+if_exp_b        : KEYWORD: elseif expr KEYWORD:then
                   (statement if_expr_b|if_expr_c?)
                 | (NEWLINE statements KEYWORD:end|if_expr_b|if_expr_c)
 
