@@ -2,10 +2,7 @@
 
 function is_perfect_square(n)
     var sqrt = n ^ 0.5
-    if sqrt * sqrt == n then
-        return true
-    end
-    return false
+    return sqrt * sqrt == n
 end
 
 function is_fibbonaci(n)
