@@ -1,9 +1,6 @@
 # Demonstracine programa
 
-function is_perfect_square(n)
-    var sqrt = n ^ 0.5
-    return sqrt * sqrt == n
-end
+function is_perfect_square(n) -> n ^ 0.5 * n ^ 0.5 == n
 
 function is_fibbonaci(n)
     if is_perfect_square(5 * n * n + 4) or is_perfect_square(5 * n * n - 4) then
