@@ -1,9 +1,9 @@
-import basic
+import banga
 
 while True:
     text = input('banga > ')
     if (text.strip() == ""): continue
-    result, error = basic.run('<stdin>', text)
+    result, error = banga.run('<stdin>', text)
 
     if error: print(error.as_string())
     elif result: 
